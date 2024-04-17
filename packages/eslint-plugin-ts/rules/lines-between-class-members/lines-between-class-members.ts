@@ -1,4 +1,4 @@
-import type { ASTNode, JSONSchema } from '@shared/types'
+import type { ASTNode, JSONSchema, Tree } from '@shared/types'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import { createRule, deepMerge } from '../../utils'
@@ -56,14 +56,17 @@ export default createRule<RuleOptions, MessageIds>({
       )
     }
 
-    return {
-      ClassBody(node): void {
-        const body = exceptAfterOverload
-          ? node.body.filter(node => !isOverload(node))
-          : node.body
+    function checkLinesBetweenClassMembers(node: Tree.ClassBody): void {
+      const body = exceptAfterOverload
+        ? node.body.filter(node => !isOverload(node))
+        : node.body
 
-        rules.ClassBody!({ ...node, body })
-      },
+      rules.ClassBody!({ ...node, body })
+    }
+
+    return {
+      ClassBody: checkLinesBetweenClassMembers,
+      TSInterfaceBody: checkLinesBetweenClassMembers as never,
     }
   },
 })
